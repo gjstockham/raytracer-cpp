@@ -5,6 +5,7 @@
 #include "ray.h"
 #include <math.h>
 
+
 class camera {
 public: 
 	camera(vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect) {

@@ -11,8 +11,13 @@
 #include "metal.h"
 #include "dielectric.h"
 #include <cfloat>
+#include <fstream>
+#include <chrono>
 
 
+struct pixel {
+	int r, g, b;
+};
 
 vec3 color(const ray& r, hitable *world, int depth) {
 	hit_record rec;
@@ -35,10 +40,11 @@ vec3 color(const ray& r, hitable *world, int depth) {
 
 int main()
 {
-	int nx = 200;
-	int ny = 100;
+	const int nx = 200;
+	const int ny = 100;
 	int ns = 100;
-	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
+	pixel pixels[nx][ny];
+	//std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
 	hitable *list[4];
 	list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
@@ -47,6 +53,7 @@ int main()
 	list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5));
 	hitable *world = new hitable_list(list, 4);
 	camera cam(vec3(-2,2,1), vec3(0,0,-1), vec3(0,1,0), 20, float(nx)/float(ny));
+	auto start = std::chrono::high_resolution_clock::now();
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++)
 		{
@@ -66,9 +73,25 @@ int main()
 			int ir = int(255.99 * col[0]);
 			int ig = int(255.99 * col[1]);
 			int ib = int(255.99 * col[2]);
-			std::cout << ir << " " << ig << " " << ib << "\n";
+			//std::cout << ir << " " << ig << " " << ib << "\n";
+			pixel p = { ir, ig, ib };
+			pixels[i][j] = p;
 		}
 	}
+	auto finish = std::chrono::high_resolution_clock::now();
+	auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
+	std::cout << "Rendered in " << milliseconds.count() <<  " milliseconds\n";
+	//write out pixels
+	std::ofstream outfile("..\\out.ppm");
+	outfile << "P3\n" << nx << " " << ny << "\n255\n";
+	for (int j = ny - 1; j >= 0; j--) {
+		for (int i = 0; i < nx; i++) {
+			outfile << pixels[i][j].r << " " << pixels[i][j].g << " " << pixels[i][j].b << "\n";
+
+		}
+	}
+	outfile.close();
+
 	
 
 	
